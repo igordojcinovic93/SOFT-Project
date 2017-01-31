@@ -19,10 +19,25 @@ import numpy as np
 global train_out
 global test_out
 global train_data
+global test_data
+global prept_model
 train_data = []
 train_out = []
 test_out = []
+test_data = []
+prept_model = []
 #pomocne funkcije
+
+def get_test_data():
+    if(test_data == []):
+        prep_data()
+    return test_data
+
+def get_model():
+    global prept_model
+    if(prept_model == []):
+        prept_model = model_prep()
+    return prept_model
 
 def to_categorical(labels, n):
     retVal = np.zeros((len(labels), n), dtype = 'int')
@@ -46,7 +61,7 @@ def prep_data():
     test_subset = np.random.choice(data.shape[0], test_rank)
     global train_data
     train_data = data[train_subset]
-
+    global test_data
     test_data = data[test_subset]
     train_labels = labels[train_subset]
     test_labels = labels[test_subset]
@@ -72,12 +87,29 @@ def model_prep():
     return model
 
 #funkcija za obucavanje
+def train_nn():
+    train(prept_model, train_data, train_out)
+
 def train(model, tr_data, tr_out):
     training = model.fit(tr_data, tr_out, nb_epoch=500, batch_size=400, verbose=0)
     print training.history['loss'][-1]
 
-prep_data()
-print("Data prept")
-prept_model = model_prep()
-print("Model prept")
-train(prept_model, train_data, train_out)
+#funkcija za validaciju
+def validate(model, data, data_out):
+    scores = model.evaluate(data, data_out, verbose=1)
+    print 'test', scores
+
+#glava funkcija
+def prep():
+    prep_data()
+    print("Data prept")
+    global prept_model
+    prept_model = model_prep()
+    print("Model prept")
+    train_nn()
+    print("Neural network trained")
+
+
+def validation():
+    validate(prept_model, test_data, test_out)
+    validate(prept_model, train_data, train_out)
